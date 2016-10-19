@@ -13,9 +13,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class DBRunnerWithOp extends QueryRunner {
@@ -48,58 +46,64 @@ public class DBRunnerWithOp extends QueryRunner {
         return query(sql, DBRunnerHandlers.singleTimestampHandler, params);
     }
 
-    private <T> T queryBean(Class<T> type, String sql, Object... params) throws SQLException {
+
+
+    public <T> T queryBean(Class<T> type, String condition) throws SQLException {
+        SuperModel t = (SuperModel) ClassUtil.initClass(type);
+        String sql = createQuerySql(t.getTableName(), null, condition);
+        return queryOne(RowMapperToBean.of(type), sql, null);
+    }
+
+    public <T> T queryBean(Class<T> type, String condition, Object... params) throws SQLException {
+        SuperModel t = (SuperModel) ClassUtil.initClass(type);
+        String sql = createQuerySql(t.getTableName(), null, condition);
         return queryOne(RowMapperToBean.of(type), sql, params);
     }
 
-    public <T> T queryBean2(Class<T> type, String condition, Object... params) throws SQLException {
+    public <T> T queryBean(Class<T> type, String condition, String orderbycondition, Object... params) throws SQLException {
         SuperModel t = (SuperModel) ClassUtil.initClass(type);
-        String sql = createQuerySql(t.getTableName(), null, condition);
-        return queryBean(type, sql, params);
-    }
-
-    public <T> T queryBean2(Class<T> type, String condition) throws SQLException {
-        SuperModel t = (SuperModel) ClassUtil.initClass(type);
-        String sql = createQuerySql(t.getTableName(), null, condition);
-        return queryBean(type, sql, null);
-    }
-
-    public <T> T queryBean2(Class<T> type, Integer id) throws SQLException {
-        SuperModel t = (SuperModel) ClassUtil.initClass(type);
-        String sql = createQuerySql(t.getTableName(), null, t.getPKFieldName() + "=? ");
-        return queryBean(type, sql, id);
+        String sql = createQuerySql(t.getTableName(), null, condition,orderbycondition);
+        return queryOne(RowMapperToBean.of(type), sql, params);
     }
 
     public <T> T queryBeanById(Class<T> type, Integer id) throws SQLException {
         SuperModel t = (SuperModel) ClassUtil.initClass(type);
         String sql = createQuerySql(t.getTableName(), null, t.getPKFieldName() + "=? ");
-        return queryBean(type, sql, id);
+        return queryOne(RowMapperToBean.of(type), sql, id);
     }
 
-    public PageVO queryBeanByPage(Class type, PageVO pageVO) throws SQLException {
-        String[] sql = buildSql(type, pageVO);
-        int i = queryInt(sql[1]);
-        Collection com = (Collection) queryBeans(type, sql[0], null);
-        pageVO.setTotalCount(i);
-        pageVO.setData(com);
-        return pageVO;
+
+    public <T> T queryBean(Class<T> type, String[] selectfield, String condition) throws SQLException {
+        return queryBean(type, selectfield, condition, "");
     }
 
-    public <T> T queryBean2(Class<T> type, String[] selectfield, String condition) throws SQLException {
-        return queryBean2(type, selectfield, condition, "");
-    }
-
-    public <T> T queryBean2(Class<T> type, String[] selectfield, String condition, String orderbycondition) throws SQLException {
+    public <T> T queryBean(Class<T> type, String[] selectfield, String condition, String orderbycondition) throws SQLException {
         SuperModel t = (SuperModel) ClassUtil.initClass(type);
         String sql = createQuerySql(t.getTableName(), selectfield, condition, orderbycondition);
         return queryBean(type, sql, null);
     }
 
-    public <T> T queryBean2(Class<T> type, String[] selectfield, String condition, Object... params) throws SQLException {
+    public <T> T queryBean(Class<T> type, String[] selectfield, String condition, Object... params) throws SQLException {
         SuperModel t = (SuperModel) ClassUtil.initClass(type);
         String sql = createQuerySql(t.getTableName(), selectfield, condition);
         return queryBean(type, sql, params);
     }
+    public <T> T queryBean(Class<T> type, String[] selectfield, String condition,String orderbycondition, Object... params) throws SQLException {
+        SuperModel t = (SuperModel) ClassUtil.initClass(type);
+        String sql = createQuerySql(t.getTableName(), selectfield, condition,orderbycondition);
+        return queryBean(type, sql, params);
+    }
+
+
+    public PageVO queryBeanByPage(Class type, PageVO pageVO) throws SQLException {
+        String[] sql = buildSql(type, pageVO);
+        int i = queryInt(sql[1]);
+        Collection com =  queryBeans(type, sql[0], null);
+        pageVO.setTotalCount(i);
+        pageVO.setData(com);
+        return pageVO;
+    }
+
 
     private String createQuerySql(String tablename, String[] selectfield, String condition) {
         return createQuerySql(tablename, selectfield, condition, null);
@@ -160,10 +164,6 @@ public class DBRunnerWithOp extends QueryRunner {
         return query(sql, DBRunnerHandlers.stringListHandler, params);
     }
 
-    private <T> List<T> queryBeans(Class<T> type, String sql, Object... params) throws SQLException {
-        return queryList(RowMapperToBean.of(type), sql, params);
-    }
-
     public <T> List<T> queryBeans2(Class<T> type, String condition) throws SQLException {
         SuperModel t = (SuperModel) ClassUtil.initClass(type);
         String sql = createQuerySql(t.getTableName(), null, condition);
@@ -186,6 +186,10 @@ public class DBRunnerWithOp extends QueryRunner {
         SuperModel t = (SuperModel) ClassUtil.initClass(type);
         String sql = createQuerySql(t.getTableName(), selectfield, condition);
         return queryBeans(type, sql, params);
+    }
+
+    private <T> List<T> queryBeans(Class<T> type, String sql, Object... params) throws SQLException {
+        return queryList(RowMapperToBean.of(type), sql, params);
     }
 
     public List<Map<String, Object>> queryMapList(String sql, Object... params) throws SQLException {
@@ -228,45 +232,45 @@ public class DBRunnerWithOp extends QueryRunner {
     }
 
 
-//	public int update(SuperModel superModel) throws SQLException {
-//		List<Object> valobj = new ArrayList<>();
-//		List<String> keys = new ArrayList<>();
-//		Object kval = 0 ;
-//		Map<String,Object> item = BeanUtil.getValueMap(superModel);
-//		Iterator iter = item.entrySet().iterator();
-//		while (iter.hasNext()) {
-//			Map.Entry entry = (Map.Entry) iter.next();
-//			Object key = entry.getKey();
-//			if (!key.equals(superModel.getPKFieldName())) {
-//				keys.add(key.toString());
-//				Object val = entry.getValue();
-//				valobj.add(val);
-//			}else{
-//				kval = entry.getValue();
-//			}
-//		}
-//		valobj.add(kval);
-//		String sql = createUpdateSql(superModel,keys) ;
-//		return super.update(sql, valobj.toArray(new Object[0]));
-//	}
+	public int update(SuperModel superModel) throws SQLException {
+		List<Object> valobj = new ArrayList<>();
+		List<String> keys = new ArrayList<>();
+		Object kval = 0 ;
+		Map<String,Object> item = BeanUtil.getValueMap(superModel);
+		Iterator iter = item.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry entry = (Map.Entry) iter.next();
+			Object key = entry.getKey();
+			if (!key.equals(superModel.getPKFieldName())) {
+				keys.add(key.toString());
+				Object val = entry.getValue();
+				valobj.add(val);
+			}else{
+				kval = entry.getValue();
+			}
+		}
+		valobj.add(kval);
+		String sql = createUpdateSql(superModel,keys) ;
+		return super.update(sql, valobj.toArray(new Object[0]));
+	}
 
-    //	public int update(SuperModel superModel,String[] updatefield) throws SQLException {
-//		List<Object> valobj = new ArrayList<>();
-//		List<String> keys = new ArrayList<>();
-//		Map<String,Object> item = BeanUtil.getValueMap(superModel);
-//		for(int i=0 ;i<updatefield.length;i++){
-//			if(item.containsKey(updatefield[i])){
-//				if (!updatefield[i].equals(superModel.getPKFieldName())) {
-//					keys.add(updatefield[i]);
-//					Object val = item.get(updatefield[i]);
-//					valobj.add(val);
-//				}
-//			}
-//		}
-//		valobj.add(item.get(superModel.getPKFieldName()));
-//		String sql = createUpdateSql(superModel,keys) ;
-//		return super.update(sql, valobj.toArray(new Object[0]));
-//	}
+    	public int update(SuperModel superModel,String[] updatefield) throws SQLException {
+		List<Object> valobj = new ArrayList<>();
+		List<String> keys = new ArrayList<>();
+		Map<String,Object> item = BeanUtil.getValueMap(superModel);
+		for(int i=0 ;i<updatefield.length;i++){
+			if(item.containsKey(updatefield[i])){
+				if (!updatefield[i].equals(superModel.getPKFieldName())) {
+					keys.add(updatefield[i]);
+					Object val = item.get(updatefield[i]);
+					valobj.add(val);
+				}
+			}
+		}
+		valobj.add(item.get(superModel.getPKFieldName()));
+		String sql = createUpdateSql(superModel,keys) ;
+		return super.update(sql, valobj.toArray(new Object[0]));
+	}
     public synchronized int dump(String sql, Object... params) throws SQLException {
         return query(sql, new ResultSetHandler<Integer>() {
             @Override
