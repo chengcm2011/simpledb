@@ -1,4 +1,4 @@
-package db;
+package com.cheng.db;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

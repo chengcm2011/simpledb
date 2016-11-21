@@ -1,5 +1,6 @@
-package db;
+package com.cheng.db;
 
+import com.cheng.util.Predef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

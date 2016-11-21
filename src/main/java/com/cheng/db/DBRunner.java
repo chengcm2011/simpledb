@@ -1,6 +1,7 @@
-package db;
+package com.cheng.db;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.cheng.util.Predef;
 import org.apache.commons.dbutils.DbUtils;
 
 import javax.sql.DataSource;

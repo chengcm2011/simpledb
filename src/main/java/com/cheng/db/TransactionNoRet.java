@@ -1,4 +1,4 @@
-package db;
+package com.cheng.db;
 
 
 public interface TransactionNoRet {

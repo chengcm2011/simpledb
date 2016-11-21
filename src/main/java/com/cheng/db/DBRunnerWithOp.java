@@ -1,4 +1,4 @@
-package db;
+package com.cheng.db;
 
 import com.cheng.lang.ClassUtil;
 import com.cheng.lang.PageVO;
