@@ -3,6 +3,7 @@ package com.cheng.db;
 import com.cheng.lang.ClassUtil;
 import com.cheng.lang.PageVO;
 import com.cheng.lang.model.SuperModel;
+import com.cheng.util.BeanUtil;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.AbstractListHandler;
 import org.apache.commons.lang3.StringUtils;
